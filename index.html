@@ -1,0 +1,2024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ultimate 3D Car Racer</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    user-select:none;
+}
+
+body{
+    overflow:hidden;
+    font-family:Arial,sans-serif;
+    background:#111;
+}
+
+canvas{
+    display:block;
+}
+
+#hud{
+    position:fixed;
+    top:12px;
+    left:12px;
+    right:12px;
+    z-index:10;
+    color:white;
+    font-weight:bold;
+    font-size:17px;
+    text-shadow:2px 2px 4px #000;
+}
+
+.row{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+}
+
+.box{
+    background:rgba(0,0,0,.48);
+    padding:7px 11px;
+    border-radius:10px;
+}
+
+#fuelBar{
+    display:inline-block;
+    width:100px;
+    height:9px;
+    background:#333;
+    border-radius:10px;
+    overflow:hidden;
+    vertical-align:middle;
+}
+
+#fuel{
+    display:block;
+    height:100%;
+    width:100%;
+    background:#20e070;
+}
+
+#nitroBar{
+    display:inline-block;
+    width:100px;
+    height:9px;
+    background:#333;
+    border-radius:10px;
+    overflow:hidden;
+    vertical-align:middle;
+}
+
+#nitro{
+    display:block;
+    height:100%;
+    width:100%;
+    background:#00bfff;
+}
+
+#menu,
+#gameOver{
+    position:fixed;
+    inset:0;
+    z-index:30;
+    background:rgba(0,0,0,.78);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    color:white;
+    text-align:center;
+}
+
+#gameOver{
+    display:none;
+}
+
+#menu h1,
+#gameOver h1{
+    font-size:42px;
+    margin-bottom:10px;
+    text-shadow:0 0 15px #00bfff;
+}
+
+#menu p{
+    margin:8px;
+    color:#ddd;
+}
+
+.mainBtn{
+    margin-top:20px;
+    padding:14px 35px;
+    border:0;
+    border-radius:12px;
+    font-size:20px;
+    font-weight:bold;
+    background:#00bfff;
+    color:white;
+}
+
+#pauseBtn{
+    position:fixed;
+    top:75px;
+    right:15px;
+    z-index:15;
+    padding:10px 15px;
+    border:0;
+    border-radius:10px;
+    background:rgba(0,0,0,.6);
+    color:white;
+    font-size:18px;
+}
+
+#mobile{
+    position:fixed;
+    bottom:18px;
+    left:0;
+    right:0;
+    z-index:15;
+    display:flex;
+    justify-content:space-between;
+    padding:0 20px;
+    pointer-events:none;
+}
+
+.side{
+    display:flex;
+    gap:12px;
+    pointer-events:auto;
+}
+
+.control{
+    width:68px;
+    height:68px;
+    border-radius:50%;
+    border:2px solid rgba(255,255,255,.5);
+    background:rgba(0,0,0,.58);
+    color:white;
+    font-size:28px;
+}
+
+#nitroBtn{
+    width:90px;
+    border-radius:20px;
+    font-size:17px;
+    background:rgba(0,100,255,.6);
+}
+
+@media(min-width:800px){
+    #mobile{
+        display:none;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- START MENU -->
+<div id="menu">
+    <h1>🏎️ ULTIMATE RACER</h1>
+    <p>3D CITY • TRAFFIC • NITRO • COINS</p>
+    <p>Keyboard: A/D or ←/→</p>
+    <p>Space = Nitro</p>
+
+    <button class="mainBtn" onclick="startGame()">
+        START RACE
+    </button>
+</div>
+
+
+<!-- HUD -->
+<div id="hud">
+
+    <div class="row">
+
+        <div class="box">
+            🏆 Score:
+            <span id="score">0</span>
+        </div>
+
+        <div class="box">
+            🪙 Coins:
+            <span id="coins">0</span>
+        </div>
+
+        <div class="box">
+            ❤️ Lives:
+            <span id="lives">3</span>
+        </div>
+
+        <div class="box">
+            ⛽ Fuel:
+            <span id="fuelBar">
+                <span id="fuel"></span>
+            </span>
+        </div>
+
+        <div class="box">
+            🔥 Nitro:
+            <span id="nitroBar">
+                <span id="nitro"></span>
+            </span>
+        </div>
+
+    </div>
+
+</div>
+
+
+<button id="pauseBtn"
+onclick="togglePause()">
+⏸️
+</button>
+
+
+<!-- GAME OVER -->
+<div id="gameOver">
+
+    <h1>GAME OVER</h1>
+
+    <p id="finalText">
+        Score: 0
+    </p>
+
+    <p id="highText">
+        High Score: 0
+    </p>
+
+    <button class="mainBtn"
+    onclick="location.reload()">
+        🔄 PLAY AGAIN
+    </button>
+
+</div>
+
+
+<!-- MOBILE CONTROLS -->
+<div id="mobile">
+
+    <div class="side">
+
+        <button class="control"
+        id="leftBtn">
+            ◀
+        </button>
+
+        <button class="control"
+        id="rightBtn">
+            ▶
+        </button>
+
+    </div>
+
+    <div class="side">
+
+        <button class="control"
+        id="nitroBtn">
+            🔥 NITRO
+        </button>
+
+    </div>
+
+</div>
+
+
+<script src=
+"https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js">
+</script>
+
+
+<script>
+
+/* =====================================
+   VARIABLES
+===================================== */
+
+let scene;
+let camera;
+let renderer;
+
+let player;
+
+let enemies=[];
+let coins=[];
+let fuelCans=[];
+let roadLines=[];
+let buildings=[];
+let trees=[];
+let streetLights=[];
+
+let score=0;
+let coinCount=0;
+let lives=3;
+
+let fuel=100;
+let nitro=100;
+
+let speed=.38;
+
+let running=false;
+let paused=false;
+let nitroActive=false;
+
+let left=false;
+let right=false;
+
+let invincible=0;
+
+let highScore=
+Number(localStorage.getItem("carHighScore")||0);
+
+
+/* =====================================
+   SCENE
+===================================== */
+
+scene=new THREE.Scene();
+
+scene.background=
+new THREE.Color(0x72c9ff);
+
+
+/* =====================================
+   CAMERA
+===================================== */
+
+camera=
+new THREE.PerspectiveCamera(
+    65,
+    window.innerWidth/window.innerHeight,
+    .1,
+    1000
+);
+
+camera.position.set(
+    0,
+    5.2,
+    10
+);
+
+
+/* =====================================
+   RENDERER
+===================================== */
+
+renderer=
+new THREE.WebGLRenderer({
+    antialias:true
+});
+
+renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+);
+
+renderer.setPixelRatio(
+    Math.min(window.devicePixelRatio,2)
+);
+
+renderer.shadowMap.enabled=true;
+
+document.body.appendChild(
+    renderer.domElement
+);
+
+
+/* =====================================
+   LIGHT
+===================================== */
+
+let hemi=
+new THREE.HemisphereLight(
+    0xffffff,
+    0x446644,
+    1.1
+);
+
+scene.add(hemi);
+
+
+let sun=
+new THREE.DirectionalLight(
+    0xffffff,
+    1.25
+);
+
+sun.position.set(
+    20,
+    30,
+    10
+);
+
+sun.castShadow=true;
+
+scene.add(sun);
+
+
+/* =====================================
+   GROUND
+===================================== */
+
+let ground=
+new THREE.Mesh(
+
+    new THREE.PlaneGeometry(
+        400,
+        400
+    ),
+
+    new THREE.MeshLambertMaterial({
+        color:0x31883c
+    })
+
+);
+
+ground.rotation.x=-Math.PI/2;
+
+ground.position.y=-.03;
+
+scene.add(ground);
+
+
+/* =====================================
+   ROAD
+===================================== */
+
+let road=
+new THREE.Mesh(
+
+    new THREE.PlaneGeometry(
+        12,
+        400
+    ),
+
+    new THREE.MeshLambertMaterial({
+        color:0x292929
+    })
+
+);
+
+road.rotation.x=-Math.PI/2;
+
+scene.add(road);
+
+
+/* =====================================
+   ROAD SIDE LINES
+===================================== */
+
+function makeSideLine(x){
+
+    let line=
+    new THREE.Mesh(
+
+        new THREE.BoxGeometry(
+            .16,
+            .04,
+            400
+        ),
+
+        new THREE.MeshBasicMaterial({
+            color:0xffd600
+        })
+
+    );
+
+    line.position.set(
+        x,
+        .04,
+        0
+    );
+
+    scene.add(line);
+
+}
+
+makeSideLine(-5.7);
+makeSideLine(5.7);
+
+
+/* =====================================
+   ROAD CENTER LINES
+===================================== */
+
+for(let i=0;i<60;i++){
+
+    let line=
+    new THREE.Mesh(
+
+        new THREE.BoxGeometry(
+            .22,
+            .06,
+            4
+        ),
+
+        new THREE.MeshBasicMaterial({
+            color:0xffffff
+        })
+
+    );
+
+    line.position.set(
+        0,
+        .05,
+        -i*7
+    );
+
+    scene.add(line);
+
+    roadLines.push(line);
+}
+
+
+/* =====================================
+   CAR CREATOR
+===================================== */
+
+function makeCar(color,type=0){
+
+    let car=
+    new THREE.Group();
+
+
+    /* BODY */
+
+    let body=
+    new THREE.Mesh(
+
+        new THREE.BoxGeometry(
+            2.05,
+            .58,
+            4.1
+        ),
+
+        new THREE.MeshPhongMaterial({
+            color:color,
+            shininess:100
+        })
+
+    );
+
+    body.position.y=.68;
+
+    body.castShadow=true;
+
+    car.add(body);
+
+
+    /* FRONT HOOD */
+
+    let hood=
+    new THREE.Mesh(
+
+        new THREE.BoxGeometry(
+            1.75,
+            .22,
+            1.15
+        ),
+
+        new THREE.MeshPhongMaterial({
+            color:color,
+            shininess:100
+        })
+
+    );
+
+    hood.position.set(
+        0,
+        .95,
+        -1.38
+    );
+
+    car.add(hood);
+
+
+    /* CABIN */
+
+    let cabin=
+    new THREE.Mesh(
+
+        new THREE.BoxGeometry(
+            1.48,
+            .72,
+            1.85
+        ),
+
+        new THREE.MeshPhongMaterial({
+            color:0x101820,
+            transparent:true,
+            opacity:.92,
+            shininess:150
+        })
+
+    );
+
+    cabin.position.set(
+        0,
+        1.2,
+        .05
+    );
+
+    cabin.castShadow=true;
+
+    car.add(cabin);
+
+
+    /* ROOF */
+
+    let roof=
+    new THREE.Mesh(
+
+        new THREE.BoxGeometry(
+            1.32,
+            .12,
+            1.45
+        ),
+
+        new THREE.MeshPhongMaterial({
+            color:color,
+            shininess:100
+        })
+
+    );
+
+    roof.position.set(
+        0,
+        1.57,
+        .05
+    );
+
+    car.add(roof);
+
+
+    /* SPOILER */
+
+    if(type===0){
+
+        let spoilerBar=
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                1.65,
+                .12,
+                .18
+            ),
+
+            new THREE.MeshPhongMaterial({
+                color:0x080808
+            })
+
+        );
+
+        spoilerBar.position.set(
+            0,
+            1.12,
+            1.9
+        );
+
+        car.add(spoilerBar);
+
+
+        let post1=
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                .12,
+                .4,
+                .12
+            ),
+
+            new THREE.MeshPhongMaterial({
+                color:0x080808
+            })
+
+        );
+
+        post1.position.set(
+            -.58,
+            .95,
+            1.85
+        );
+
+        car.add(post1);
+
+
+        let post2=post1.clone();
+
+        post2.position.x=.58;
+
+        car.add(post2);
+
+    }
+
+
+    /* BUMPERS */
+
+    let front=
+    new THREE.Mesh(
+
+        new THREE.BoxGeometry(
+            1.9,
+            .22,
+            .18
+        ),
+
+        new THREE.MeshPhongMaterial({
+            color:0x111111
+        })
+
+    );
+
+    front.position.set(
+        0,
+        .48,
+        -2.04
+    );
+
+    car.add(front);
+
+
+    let rear=front.clone();
+
+    rear.position.z=2.04;
+
+    car.add(rear);
+
+
+    /* WHEELS */
+
+    let wheelGeo=
+    new THREE.CylinderGeometry(
+        .43,
+        .43,
+        .38,
+        24
+    );
+
+    let wheelMat=
+    new THREE.MeshPhongMaterial({
+        color:0x050505,
+        shininess:40
+    });
+
+
+    let wheelPositions=[
+        [-1.08,.42,1.28],
+        [1.08,.42,1.28],
+        [-1.08,.42,-1.28],
+        [1.08,.42,-1.28]
+    ];
+
+
+    wheelPositions.forEach(p=>{
+
+        let wheel=
+        new THREE.Mesh(
+            wheelGeo,
+            wheelMat
+        );
+
+        wheel.rotation.z=
+        Math.PI/2;
+
+        wheel.position.set(
+            p[0],
+            p[1],
+            p[2]
+        );
+
+        wheel.castShadow=true;
+
+        car.add(wheel);
+
+    });
+
+
+    /* HEADLIGHTS */
+
+    let headMat=
+    new THREE.MeshBasicMaterial({
+        color:0xffffdd
+    });
+
+
+    [-.62,.62].forEach(x=>{
+
+        let lamp=
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                .4,
+                .2,
+                .08
+            ),
+
+            headMat
+
+        );
+
+        lamp.position.set(
+            x,
+            .76,
+            -2.08
+        );
+
+        car.add(lamp);
+
+    });
+
+
+    /* TAILLIGHTS */
+
+    let tailMat=
+    new THREE.MeshBasicMaterial({
+        color:0xff0011
+    });
+
+
+    [-.62,.62].forEach(x=>{
+
+        let lamp=
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                .4,
+                .18,
+                .08
+            ),
+
+            tailMat
+
+        );
+
+        lamp.position.set(
+            x,
+            .76,
+            2.08
+        );
+
+        car.add(lamp);
+
+    });
+
+
+    /* EXHAUST */
+
+    [-.55,.55].forEach(x=>{
+
+        let exhaust=
+        new THREE.Mesh(
+
+            new THREE.CylinderGeometry(
+                .09,
+                .09,
+                .25,
+                10
+            ),
+
+            new THREE.MeshPhongMaterial({
+                color:0x777777
+            })
+
+        );
+
+        exhaust.rotation.x=
+        Math.PI/2;
+
+        exhaust.position.set(
+            x,
+            .42,
+            2.12
+        );
+
+        car.add(exhaust);
+
+    });
+
+
+    return car;
+}
+
+
+/* =====================================
+   PLAYER CAR
+===================================== */
+
+player=
+makeCar(0xe60012,0);
+
+player.position.set(
+    0,
+    0,
+    5
+);
+
+scene.add(player);
+
+
+/* =====================================
+   ENEMY CARS
+===================================== */
+
+function addEnemy(){
+
+    let colors=[
+        0x1565c0,
+        0xffc400,
+        0x7b1fa2,
+        0x00a878,
+        0xff6d00,
+        0xffffff,
+        0x111111
+    ];
+
+    let enemy=
+    makeCar(
+        colors[
+            Math.floor(
+                Math.random()*colors.length
+            )
+        ],
+        Math.random()>.5?0:1
+    );
+
+
+    let lanes=[
+        -3,
+        0,
+        3
+    ];
+
+
+    enemy.position.set(
+
+        lanes[
+            Math.floor(
+                Math.random()*3
+            )
+        ],
+
+        0,
+
+        -50-Math.random()*180
+
+    );
+
+
+    scene.add(enemy);
+
+    enemies.push(enemy);
+}
+
+
+for(let i=0;i<7;i++){
+
+    addEnemy();
+
+}
+
+
+/* =====================================
+   BUILDINGS
+===================================== */
+
+function addBuilding(x,z){
+
+    let h=
+    5+Math.random()*14;
+
+    let w=
+    3.5+Math.random()*3;
+
+    let building=
+    new THREE.Mesh(
+
+        new THREE.BoxGeometry(
+            w,
+            h,
+            5
+        ),
+
+        new THREE.MeshLambertMaterial({
+            color:new THREE.Color(
+                .15+Math.random()*.35,
+                .15+Math.random()*.35,
+                .2+Math.random()*.35
+            )
+        })
+
+    );
+
+    building.position.set(
+        x,
+        h/2,
+        z
+    );
+
+    building.castShadow=true;
+
+    scene.add(building);
+
+    buildings.push(building);
+
+
+    /* WINDOWS */
+
+    for(let y=2;y<h;y+=2.5){
+
+        for(let side=-1;side<=1;side+=2){
+
+            let windowMesh=
+            new THREE.Mesh(
+
+                new THREE.BoxGeometry(
+                    .65,
+                    .7,
+                    .05
+                ),
+
+                new THREE.MeshBasicMaterial({
+                    color:
+                    Math.random()>.5
+                    ?0xffff88
+                    :0x87ceff
+                })
+
+            );
+
+            windowMesh.position.set(
+                x+side*(w/2+.01),
+                y,
+                z
+            );
+
+            windowMesh.rotation.y=
+            side<0?Math.PI/2:-Math.PI/2;
+
+            scene.add(windowMesh);
+
+            buildings.push(windowMesh);
+
+        }
+
+    }
+
+}
+
+
+for(let i=0;i<28;i++){
+
+    addBuilding(
+        -11-Math.random()*7,
+        -i*13
+    );
+
+    addBuilding(
+        11+Math.random()*7,
+        -i*13
+    );
+
+}
+
+
+/* =====================================
+   TREES
+===================================== */
+
+function addTree(x,z){
+
+    let tree=
+    new THREE.Group();
+
+
+    let trunk=
+    new THREE.Mesh(
+
+        new THREE.CylinderGeometry(
+            .22,
+            .35,
+            2,
+            10
+        ),
+
+        new THREE.MeshLambertMaterial({
+            color:0x704214
+        })
+
+    );
+
+    trunk.position.y=1;
+
+    tree.add(trunk);
+
+
+    let crown=
+    new THREE.Mesh(
+
+        new THREE.SphereGeometry(
+            1.45,
+            14,
+            14
+        ),
+
+        new THREE.MeshLambertMaterial({
+            color:0x12852f
+        })
+
+    );
+
+    crown.position.y=2.7;
+
+    tree.add(crown);
+
+
+    tree.position.set(
+        x,
+        0,
+        z
+    );
+
+    scene.add(tree);
+
+    trees.push(tree);
+
+}
+
+
+for(let i=0;i<45;i++){
+
+    addTree(
+        -7.5-Math.random()*3,
+        -i*8
+    );
+
+    addTree(
+        7.5+Math.random()*3,
+        -i*8
+    );
+
+}
+
+
+/* =====================================
+   STREET LIGHTS
+===================================== */
+
+function addStreetLight(x,z){
+
+    let group=
+    new THREE.Group();
+
+
+    let pole=
+    new THREE.Mesh(
+
+        new THREE.CylinderGeometry(
+            .08,
+            .08,
+            4,
+            8
+        ),
+
+        new THREE.MeshLambertMaterial({
+            color:0x333333
+        })
+
+    );
+
+    pole.position.y=2;
+
+    group.add(pole);
+
+
+    let lamp=
+    new THREE.Mesh(
+
+        new THREE.SphereGeometry(
+            .22,
+            10,
+            10
+        ),
+
+        new THREE.MeshBasicMaterial({
+            color:0xffffaa
+        })
+
+    );
+
+    lamp.position.set(
+        0,
+        4,
+        0
+    );
+
+    group.add(lamp);
+
+
+    group.position.set(
+        x,
+        0,
+        z
+    );
+
+    scene.add(group);
+
+    streetLights.push(group);
+
+}
+
+
+for(let i=0;i<30;i++){
+
+    addStreetLight(
+        -6.7,
+        -i*15
+    );
+
+    addStreetLight(
+        6.7,
+        -i*15
+    );
+
+}
+
+
+/* =====================================
+   COIN
+===================================== */
+
+function addCoin(){
+
+    let coin=
+    new THREE.Mesh(
+
+        new THREE.TorusGeometry(
+            .38,
+            .12,
+            10,
+            20
+        ),
+
+        new THREE.MeshPhongMaterial({
+            color:0xffd700,
+            emissive:0x553300,
+            shininess:100
+        })
+
+    );
+
+    let lanes=[
+        -3,
+        0,
+        3
+    ];
+
+    coin.position.set(
+
+        lanes[
+            Math.floor(
+                Math.random()*3
+            )
+        ],
+
+        .8,
+
+        -50-Math.random()*180
+
+    );
+
+    coin.rotation.x=
+    Math.PI/2;
+
+    scene.add(coin);
+
+    coins.push(coin);
+
+}
+
+
+for(let i=0;i<12;i++){
+
+    addCoin();
+
+}
+
+
+/* =====================================
+   FUEL
+===================================== */
+
+function addFuel(){
+
+    let fuelCan=
+    new THREE.Mesh(
+
+        new THREE.BoxGeometry(
+            .55,
+            .8,
+            .35
+        ),
+
+        new THREE.MeshLambertMaterial({
+            color:0x00aa55
+        })
+
+    );
+
+    let lanes=[
+        -3,
+        0,
+        3
+    ];
+
+    fuelCan.position.set(
+
+        lanes[
+            Math.floor(
+                Math.random()*3
+            )
+        ],
+
+        .55,
+
+        -80-Math.random()*250
+
+    );
+
+    scene.add(fuelCan);
+
+    fuelCans.push(fuelCan);
+
+}
+
+
+for(let i=0;i<5;i++){
+
+    addFuel();
+
+}
+
+
+/* =====================================
+   COLLISION
+===================================== */
+
+function hit(a,b){
+
+    return(
+        Math.abs(
+            a.position.x-
+            b.position.x
+        )<1.7
+        &&
+        Math.abs(
+            a.position.z-
+            b.position.z
+        )<2.7
+    );
+
+}
+
+
+/* =====================================
+   KEYBOARD
+===================================== */
+
+document.addEventListener(
+"keydown",
+e=>{
+
+    if(
+        e.key==="ArrowLeft" ||
+        e.key.toLowerCase()==="a"
+    )
+        left=true;
+
+
+    if(
+        e.key==="ArrowRight" ||
+        e.key.toLowerCase()==="d"
+    )
+        right=true;
+
+
+    if(e.code==="Space")
+        nitroActive=true;
+
+
+    if(e.key.toLowerCase()==="p")
+        togglePause();
+
+});
+
+
+document.addEventListener(
+"keyup",
+e=>{
+
+    if(
+        e.key==="ArrowLeft" ||
+        e.key.toLowerCase()==="a"
+    )
+        left=false;
+
+
+    if(
+        e.key==="ArrowRight" ||
+        e.key.toLowerCase()==="d"
+    )
+        right=false;
+
+
+    if(e.code==="Space")
+        nitroActive=false;
+
+});
+
+
+/* =====================================
+   MOBILE CONTROLS
+===================================== */
+
+function holdButton(
+    element,
+    down,
+    up
+){
+
+    element.addEventListener(
+        "touchstart",
+        e=>{
+            e.preventDefault();
+            down();
+        }
+    );
+
+    element.addEventListener(
+        "touchend",
+        e=>{
+            e.preventDefault();
+            up();
+        }
+    );
+
+    element.addEventListener(
+        "mousedown",
+        down
+    );
+
+    element.addEventListener(
+        "mouseup",
+        up
+    );
+
+}
+
+
+holdButton(
+    document.getElementById("leftBtn"),
+    ()=>left=true,
+    ()=>left=false
+);
+
+
+holdButton(
+    document.getElementById("rightBtn"),
+    ()=>right=true,
+    ()=>right=false
+);
+
+
+holdButton(
+    document.getElementById("nitroBtn"),
+    ()=>nitroActive=true,
+    ()=>nitroActive=false
+);
+
+
+/* =====================================
+   START
+===================================== */
+
+function startGame(){
+
+    document.getElementById(
+        "menu"
+    ).style.display="none";
+
+    running=true;
+
+}
+
+
+/* =====================================
+   PAUSE
+===================================== */
+
+function togglePause(){
+
+    if(!running)
+        return;
+
+    paused=!paused;
+
+    document.getElementById(
+        "pauseBtn"
+    ).innerHTML=
+    paused?"▶️":"⏸️";
+
+}
+
+
+/* =====================================
+   GAME OVER
+===================================== */
+
+function gameOver(){
+
+    running=false;
+
+    if(score>highScore){
+
+        highScore=score;
+
+        localStorage.setItem(
+            "carHighScore",
+            highScore
+        );
+
+    }
+
+
+    document.getElementById(
+        "finalText"
+    ).innerHTML=
+    "🏆 Score: "+score+
+    " &nbsp; 🪙 Coins: "+coinCount;
+
+
+    document.getElementById(
+        "highText"
+    ).innerHTML=
+    "⭐ High Score: "+highScore;
+
+
+    document.getElementById(
+        "gameOver"
+    ).style.display="flex";
+
+}
+
+
+/* =====================================
+   DAY / NIGHT
+===================================== */
+
+let worldTime=0;
+
+function dayNight(){
+
+    worldTime+=.0008;
+
+    let value=
+    (Math.sin(worldTime)+1)/2;
+
+
+    if(value<.28){
+
+        scene.background=
+        new THREE.Color(
+            0x07152e
+        );
+
+        hemi.intensity=.35;
+        sun.intensity=.25;
+
+    }
+    else{
+
+        scene.background=
+        new THREE.Color(
+            0x72c9ff
+        );
+
+        hemi.intensity=1.1;
+        sun.intensity=1.25;
+
+    }
+
+}
+
+
+/* =====================================
+   MAIN GAME LOOP
+===================================== */
+
+function animate(){
+
+    requestAnimationFrame(
+        animate
+    );
+
+
+    if(running && !paused){
+
+        /* -----------------
+           PLAYER
+        ----------------- */
+
+        if(left)
+            player.position.x-=.15;
+
+        if(right)
+            player.position.x+=.15;
+
+
+        player.position.x=
+        Math.max(
+            -4.5,
+            Math.min(
+                4.5,
+                player.position.x
+            )
+        );
+
+
+        /* -----------------
+           NITRO
+        ----------------- */
+
+        if(
+            nitroActive &&
+            nitro>0
+        ){
+
+            nitro-=.65;
+
+            speed=
+            Math.min(
+                .95,
+                speed+.025
+            );
+
+        }
+        else{
+
+            nitro+=.08;
+
+            speed=
+            Math.max(
+                .38,
+                speed-.002
+            );
+
+        }
+
+        nitro=
+        Math.max(
+            0,
+            Math.min(
+                100,
+                nitro
+            )
+        );
+
+
+        document.getElementById(
+            "nitro"
+        ).style.width=
+        nitro+"%";
+
+
+        /* -----------------
+           FUEL
+        ----------------- */
+
+        fuel-=.012;
+
+        if(nitroActive)
+            fuel-=.018;
+
+
+        fuel=
+        Math.max(
+            0,
+            fuel
+        );
+
+
+        document.getElementById(
+            "fuel"
+        ).style.width=
+        fuel+"%";
+
+
+        if(fuel<=0){
+
+            gameOver();
+
+        }
+
+
+        /* -----------------
+           ROAD
+        ----------------- */
+
+        roadLines.forEach(
+        line=>{
+
+            line.position.z+=speed;
+
+            if(line.position.z>15)
+                line.position.z-=420;
+
+        });
+
+
+        /* -----------------
+           ENEMY CARS
+        ----------------- */
+
+        enemies.forEach(
+        enemy=>{
+
+            enemy.position.z+=speed;
+
+
+            if(invincible>0)
+                invincible--;
+
+
+            if(
+                hit(player,enemy)
+                &&
+                invincible<=0
+            ){
+
+                lives--;
+
+                invincible=100;
+
+                enemy.position.z=
+                -120-Math.random()*80;
+
+
+                document.getElementById(
+                    "lives"
+                ).textContent=lives;
+
+
+                /* Car gets pushed */
+
+                player.position.x+=
+                player.position.x<
+                enemy.position.x
+                ?-.8
+                :.8;
+
+
+                if(lives<=0){
+
+                    gameOver();
+
+                }
+
+            }
+
+
+            if(enemy.position.z>18){
+
+                enemy.position.z=
+                -120-Math.random()*100;
+
+
+                let lanes=[
+                    -3,
+                    0,
+                    3
+                ];
+
+                enemy.position.x=
+                lanes[
+                    Math.floor(
+                        Math.random()*3
+                    )
+                ];
+
+
+                score++;
+
+                document.getElementById(
+                    "score"
+                ).textContent=score;
+
+            }
+
+        });
+
+
+        /* -----------------
+           COINS
+        ----------------- */
+
+        coins.forEach(
+        coin=>{
+
+            coin.position.z+=speed;
+
+            coin.rotation.z+=.08;
+
+
+            if(hit(player,coin)){
+
+                coinCount++;
+
+                score+=5;
+
+                document.getElementById(
+                    "coins"
+                ).textContent=
+                coinCount;
+
+                document.getElementById(
+                    "score"
+                ).textContent=
+                score;
+
+
+                coin.position.z=
+                -120-Math.random()*150;
+
+            }
+
+
+            if(coin.position.z>18){
+
+                coin.position.z=
+                -120-Math.random()*150;
+
+            }
+
+        });
+
+
+        /* -----------------
+           FUEL CANS
+        ----------------- */
+
+        fuelCans.forEach(
+        can=>{
+
+            can.position.z+=speed;
+
+            can.rotation.y+=.03;
+
+
+            if(hit(player,can)){
+
+                fuel=
+                Math.min(
+                    100,
+                    fuel+30
+                );
+
+
+                can.position.z=
+                -150-Math.random()*180;
+
+            }
+
+
+            if(can.position.z>18){
+
+                can.position.z=
+                -150-Math.random()*180;
+
+            }
+
+        });
+
+
+        /* -----------------
+           BUILDINGS
+        ----------------- */
+
+        buildings.forEach(
+        object=>{
+
+            object.position.z+=speed;
+
+            if(object.position.z>25)
+                object.position.z-=420;
+
+        });
+
+
+        /* -----------------
+           TREES
+        ----------------- */
+
+        trees.forEach(
+        tree=>{
+
+            tree.position.z+=speed;
+
+            if(tree.position.z>25)
+                tree.position.z-=420;
+
+        });
+
+
+        /* -----------------
+           STREET LIGHTS
+        ----------------- */
+
+        streetLights.forEach(
+        light=>{
+
+            light.position.z+=speed;
+
+            if(light.position.z>25)
+                light.position.z-=450;
+
+        });
+
+
+        /* -----------------
+           SCORE
+        ----------------- */
+
+        score+=.01;
+
+        document.getElementById(
+            "score"
+        ).textContent=
+        Math.floor(score);
+
+
+        /* -----------------
+           CAMERA
+        ----------------- */
+
+        camera.position.x+=
+        (
+            player.position.x*.28-
+            camera.position.x
+        )*.08;
+
+
+        camera.lookAt(
+            player.position.x,
+            .4,
+            -15
+        );
+
+
+        /* DAY NIGHT */
+
+        dayNight();
+
+    }
+
+
+    renderer.render(
+        scene,
+        camera
+    );
+
+}
+
+
+animate();
+
+
+/* =====================================
+   RESIZE
+===================================== */
+
+window.addEventListener(
+"resize",
+()=>{
+
+    camera.aspect=
+    window.innerWidth/
+    window.innerHeight;
+
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(
+        window.innerWidth,
+        window.innerHeight
+    );
+
+});
+
+</script>
+
+</body>
+</html>

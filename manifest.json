@@ -1,0 +1,13 @@
+{
+  "background_color": "#66d9ff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "City-Car-Game",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "City-Car",
+  "start_url": "/",
+  "theme_color": "#ffffff",
+  "id": "city-car-game",
+  "description": "A 3D city car racing game"
+}
